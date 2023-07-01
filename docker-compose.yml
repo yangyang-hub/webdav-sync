@@ -1,0 +1,11 @@
+version: '3'
+services:
+  webdav-sync:
+    build: .
+    container_name: webdav-sync
+    volumes:
+      - /sata/Public/aliyundrive:/data
+    environment:
+      WEBDAV_URL: "http://192.168.31.1:8889"
+      SYNC_CORN: "*/10 * * * *"
+    restart: always
