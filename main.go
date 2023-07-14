@@ -14,6 +14,7 @@ import (
 )
 
 const LocalPath string = "/data"
+const TotalRetry int = 5
 
 var BaseUrl string
 var TaskFlag bool = false
@@ -58,7 +59,7 @@ func webdavSync() {
 	}
 	for _, value := range rmrfCommand {
 		fmt.Println("delete file&path:", value)
-		execCommand("rm", "-rf", value)
+		execCommand(0, "rm", "-rf", value)
 	}
 
 	for key, linkMap := range files {
@@ -76,11 +77,11 @@ func webdavSync() {
 	}
 	for _, value := range mkdirCommand {
 		fmt.Println("create dir:", value)
-		execCommand("mkdir", "-p", value)
+		execCommand(0, "mkdir", "-p", value)
 	}
 	for _, value := range wgetCommand {
 		fmt.Println("download file:", value[0], value[1])
-		execCommand("wget", "-O", value[0], value[1])
+		execCommand(0, "wget", "-O", value[0], value[1])
 		time.Sleep(10 * time.Second)
 	}
 	TaskFlag = false
@@ -170,11 +171,16 @@ func localPath() map[string]map[string]string {
 	return files
 }
 
-func execCommand(name string, arg ...string) {
+func execCommand(retryCount int, name string, arg ...string) {
 	cmd := exec.Command(name, arg...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
+		if retryCount < TotalRetry {
+			retryCount++
+			time.Sleep(10 * time.Second)
+			execCommand(retryCount, name, arg...)
+		}
 	}
 	fmt.Println(string(output))
 }
